@@ -4,7 +4,7 @@
     <h1>{% block title %} users {% endblock %}</h1>
     {% for user in users %}
         <div class='user'>
-            <h3>#{{ user.id }} - {{ user.username }} - {{ user.email }}}}</h3>
+            <h3>#{{ user.id }} - {{ user.username }} - {{ user.email }} - {{usere.role}}}}</h3>
         </div>
     {% endfor %}
 {% endblock %}

@@ -3,26 +3,8 @@
 from os import environ
 from flask_sqlalchemy import SQLAlchemy
 from flask import Flask, render_template, request, url_for, redirect, make_response, jsonify
+from database import db, User, app
 
-
-app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = environ.get('DB_URL')
-db = SQLAlchemy(app)
-
-
-class User(db.Model):
-    __tablename__ = 'users'
-
-    id = db.Column(db.Integer, primary_key=True)
-    username = db.Column(db.String(80), unique=True, nullable=False)
-    password = db.Column(db.String(80), unique=False, nullable=False)
-    email = db.Column(db.String(120), unique=True, nullable=False)
-
-    def json(self):
-        return {'id': self.id,'username': self.username, 'email': self.email}
-
-
-db.create_all()
 
 @app.route('/select')
 def index():
@@ -35,7 +17,8 @@ def create():
         name = request.form['name']
         password = request.form['password']
         email = request.form['email']
-        new_user = User(username=name, password=password, email=email)
+        role = request.form['role']
+        new_user = User(username=name, password=password, email=email, role=role)
         db.session.add(new_user)
         db.session.commit()
         return redirect(url_for('index'))
@@ -50,12 +33,15 @@ def update_user(id):
             name = request.form['name']
             password = request.form['password']
             email = request.form['email']
+            role = request.form['role']
             if name != "":
                 user.username = name
             if password != "":
                 user.password = password
             if email != "":
                 user.email = email
+            if role != "":
+                user.role = role
             db.session.commit()
         return redirect(url_for('index'))
     return render_template('update.html')
@@ -72,3 +58,18 @@ def delete_user(id):
     return make_response(jsonify({'message': 'user not found'}), 404)
   except e:
     return make_response(jsonify({'message': 'error deleting user'}), 500)
+
+
+@app.route('/', methods=['GET, "POST"'])
+def login():
+    if request.method == "POST":
+        name = request.form['name']
+        password = request.form['password']
+        if name != "" and password != "":
+            user = User.query.filter_by(name=name).first()
+            if user != None and user.password == password:
+                return redirect(url_for('index'))
+        return render_template('login.html')
+    else:
+        return render_template('login.html')
+
